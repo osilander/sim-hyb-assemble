@@ -1,13 +1,16 @@
 GENOMES, = glob_wildcards("fasta/{genome}.fna")
+###########
 # divisions are: Q1<2.5Kp; 2.5Kbp<Q2<5Kbp; 5Kbp<Q3<10Kbp; 10Kbp<Q4
 LENGTH = ["Q1","Q2"]
 COVERAGE = [5,10]
-SIM_NANO_READS = 2000
+SIM_NANO_READS = 200000
+SIM_ILLUM_READS = 400000
 
 rule all:
 	input:
 		expand("results/illumina/{genome}.illumina.bwa.read1.fastq", genome=GENOMES),
 		expand("results/illumina/{genome}.illumina.bwa.read2.fastq", genome=GENOMES),
+		#expand("results/nanopore/{genome}_{read_len}_cov{cov}_fract.txt", genome=GENOMES, read_len=LENGTH, cov=COVERAGE)
 		expand("results/nanopore/{genome}_{read_len}_cov{cov}_reads.fasta", genome=GENOMES, read_len=LENGTH, cov=COVERAGE)
 
 rule simulate_illumina:
@@ -19,7 +22,7 @@ rule simulate_illumina:
 	params:
 		R1_error="0.0001-0.001",
 		R2_error="0.0001-0.001",
-		number_reads=4000,
+		number_reads=SIM_ILLUM_READS,
 		read_length=250,
 		mut_rate=0,
 		indel_rate=0,
@@ -63,20 +66,28 @@ rule get_total_nanosim_bp:
 	shell:
 		"grep -v '>' {input} | wc -m > {output}"
 
-rule subsample_nanopore:
+rule get_fract_reads:
 	input:
 		genome_bp="fasta/{genome}_length.txt",
-		nanosim_bp="results/nanopore/{genome}_{read_len}_length.txt",
-		nano_reads="results/nanopore/{genome}_{read_len}_reads.fasta"
+		nanosim_bp="results/nanopore/{genome}_{read_len}_length.txt"
+	output:
+		fract_file="results/nanopore/{genome}_{read_len}_cov{cov}_fract.txt"
+	run:
+		x = int(open(input.genome_bp).readline())
+		y = int(open(input.nanosim_bp).readline())
+		z = int(SIM_NANO_READS)
+		c = int(wildcards.cov)
+		fract = (x*c)/(y-z)
+		f = open(output.fract_file, 'w').write(str(fract))
+
+rule subsample_nanopore:
+	input:
+		fract_file="results/nanopore/{genome}_{read_len}_cov{cov}_fract.txt",
+		reads_file="results/nanopore/{genome}_{read_len}_reads.fasta"
 	output:
 		"results/nanopore/{genome}_{read_len}_cov{cov}_reads.fasta"
-	run:
-		#my_num = {wildcards.cov}*{wildcards.cov}
-		shell("seqtk sample -s $RANDOM {input.nano_reads} {wildcards.cov} > {output}")
-
-############
-# ignore below
-############
+	shell:
+		"seqtk sample -s RANDOM {input.reads_file} `cat {input.fract_file}` > {output}"
 
 rule clean:
 	run:
@@ -84,7 +95,7 @@ rule clean:
 
 rule assembly:
 	input:
-		ont="results/nanopore/{genome}_{read_len}_reads.fasta",
+		ont="results/nanopore/{genome}_{read_len}_cov{cov}_reads.fasta",
 		r1="results/illumina/{genome}.illumina.bwa.read1.fastq",
 		r2="results/illumina/{genome}.illumina.bwa.read2.fastq"
 	output:

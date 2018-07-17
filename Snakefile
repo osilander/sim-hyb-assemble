@@ -16,7 +16,7 @@ rule all:
 	input:
 		expand("results/illumina/{genome}.illumina.bwa.read1.fastq", genome=GENOMES),
 		expand("results/illumina/{genome}.illumina.bwa.read2.fastq", genome=GENOMES),
-		expand("results/nanopore/{genome}_{read_len}_cov{cov}_reads.fasta", genome=GENOMES, read_len=LENGTH, cov=COVERAGE)
+		expand("results/nanopore/{genome}_{read_len}_cov{cov}_reads.fasta", genome=GENOMES, read_len=LENGTH, cov=COVERAGE),
 		expand("results/assemblies/{genome}/{read_len}_cov{cov}/assembly.fasta", genome=GENOMES, read_len=LENGTH, cov=COVERAGE)
 
 rule simulate_illumina:

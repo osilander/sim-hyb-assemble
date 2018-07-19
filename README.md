@@ -4,9 +4,10 @@ Consists only of a Snakefile at this point, requires a .fna file containing a ge
 Uses dwgsim and nanosim to simulate paired end Illumina and ONT reads, respectively.
 The ONT reads are simulated at different reads lengths, and downsampled to different coverage values.
 The two read sets are then assembled using a hybrid approach implemented by Unicycler.
-The assembly is compared to the original fasta to using various statistics:
-  - variants called using mpileup
-  - discordant read mappings per [sliding window]
-  - variation in read coverage
-  - mummerplot of genome synteny
-  - assembly length vs. genome length
+The assembly is compared to the original fasta using quast.
+Depends:
+	- dwgsim
+	- nanosim
+	- quast
+	- unicycler
+	- seqtk

@@ -2,6 +2,7 @@ GENOMES, = glob_wildcards("fasta/{genome}.fna")
 ###########
 # divisions are: Q1<2.5Kp; 2.5Kbp<Q2<5Kbp; 5Kbp<Q3<10Kbp; 10Kbp<Q4
 LENGTH = ["Q1","Q2","Q3","Q4","all"]
+#REPS = ["R1","R2","R3","R4","R5"]
 #must be one more of these than the names
 #change later
 #LENGTH_DIVS = ["Q3","Q4"]
@@ -15,10 +16,6 @@ ILLUM_FRACT = ILLUM_COV/ILLUM_LEN/2
 
 rule all:
 	input:
-		expand("results/illumina/{genome}.illumina.bwa.read1.fastq", genome=GENOMES),
-		expand("results/illumina/{genome}.illumina.bwa.read2.fastq", genome=GENOMES),
-		expand("results/nanopore/{genome}_{read_len}_cov{cov}_reads.fasta", genome=GENOMES, read_len=LENGTH, cov=COVERAGE),
-		expand("results/assemblies/{genome}/{read_len}_cov{cov}/assembly.fasta", genome=GENOMES, read_len=LENGTH, cov=COVERAGE),
 		expand("results/assemblies/{genome}/{read_len}_cov{cov}/quast_results/report.pdf", genome=GENOMES, read_len=LENGTH, cov=COVERAGE)
 
 rule simulate_illumina:
